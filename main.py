@@ -8,7 +8,7 @@ from config import settings
 from database import Base, SessionLocal, engine
 from models.user import User
 from models.order import Order, OrderStatus
-from routers import auth, order
+from routers import auth, order, customer, invoice, address, order_product, product
 
 Base.metadata.create_all(bind=engine)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -55,6 +55,11 @@ app = FastAPI(lifespan=lifespan)
 
 app.include_router(auth.router)
 app.include_router(order.router)
+app.include_router(customer.router)
+app.include_router(invoice.router)
+app.include_router(address.router)
+app.include_router(order_product.router)
+app.include_router(product.router)
 
 if __name__ == "__main__":
     import uvicorn

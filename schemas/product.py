@@ -1,10 +1,16 @@
 from datetime import datetime
 from typing import Optional
+from pydantic import BaseModel, Field, HttpUrl, conint, constr
+from typing import Optional, List
 
-from pydantic import BaseModel
+from .base import BaseSchema
 
+class ProductOrderCreate(BaseSchema):
+    product_id: int
+    quantity: int
+    discount: Optional[float] = 0.0
 
-class ProductOut(BaseModel):
+class ProductOut(BaseSchema):
     id: int
     product_name: str
     description: Optional[str]
@@ -21,8 +27,6 @@ class ProductOut(BaseModel):
     class Config:
         form_attributes = True
 
-from pydantic import BaseModel, Field, HttpUrl, conint, constr
-from typing import Optional, List
 
 class ProductCreate(BaseModel):
     product_name: constr(min_length=1)
@@ -52,3 +56,5 @@ class ProductCreate(BaseModel):
     is_featured: Optional[bool] = False
 
     # For tags, categories, attributes, faqs you can add lists here
+
+ProductUpdate = ProductCreate

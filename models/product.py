@@ -1,7 +1,7 @@
-from xmlrpc.client import Boolean
 from sqlalchemy import Column, Integer, String, Float, DateTime, Text, Boolean
 from datetime import datetime
 from database import Base
+from sqlalchemy.orm import relationship
 
 class Product(Base):
     __tablename__ = "products"
@@ -29,6 +29,8 @@ class Product(Base):
     height = Column(Float, default=0.0)
     seo_title = Column(String(255), nullable=True)
     seo_keywords = Column(String(255), nullable=True)
+
+    order_products = relationship("OrderProduct", back_populates="product")
     seo_description = Column(Text, nullable=True)
     product_status = Column(String(50), default="Draft")  # Draft, Published, etc.
     is_featured = Column(Boolean, default=False)
