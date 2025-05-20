@@ -60,7 +60,6 @@ def create_order(db: Session, order_data: OrderCreateCombined, user_id: int) -> 
         order = Order(
             order_number=order_number,
             customer_id=customer.id,
-            # customer_name=customer.first_name + " " + customer.last_name,
             order_date=datetime.utcnow(),
             payment_method=order_data.payment_method,
             status=OrderStatus.PENDING,
@@ -90,7 +89,7 @@ def create_order(db: Session, order_data: OrderCreateCombined, user_id: int) -> 
             if not product:
                 raise ValueError(f"Product id {item.product_id} not found")
             
-            subtotal = (product.price * item.quantity) - (item.discount or 0)
+            subtotal = (product.sale_price * item.quantity) - (item.discount or 0)
             if subtotal < 0:
                 subtotal = 0
             
@@ -110,6 +109,8 @@ def create_order(db: Session, order_data: OrderCreateCombined, user_id: int) -> 
         return order
     except Exception as e:
         db.rollback()
+        import traceback
+        traceback.print_exc()
         raise ValueError(f"Failed to create order: {str(e)}")
 
 def get_orders(db: Session, user_id: int) -> List[Order]:

@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from models.product import Product
 from schemas.product import ProductCreate, ProductUpdate
 from utils.auth_dependency import get_current_user, get_db
-from crud.product import create_product, get_products, get_product, update_product, delete_product
+from crud.product import create_product as create_product_crud, get_products, get_product, update_product, delete_product
 from models.user import User
 
 router = APIRouter(prefix="/products", tags=["products"])
@@ -28,7 +28,7 @@ async def create_product(
 ):
     """Create a new product."""
     try:
-        return create_product(db, product_in)
+        return create_product_crud(db, product_in)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 

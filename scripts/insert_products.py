@@ -58,7 +58,7 @@ def get_sample_products() -> List[Dict]:
 def insert_products():
     """Insert sample products into the database."""
     # Get authentication token (replace with your actual token)
-    token = os.getenv("API_TOKEN", "your_token_here")
+    token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJuYXJlbmRyYTExNDcwQGdtYWlsLmNvbSIsImV4cCI6MTc0NzcyMTY1MiwidHlwZSI6ImFjY2VzcyJ9.TqQxLtaWe34tWCoTxdPG99VupAtqJddOcQuIQH0ZNoD-BLIHWjFAcQFBs3vlmASkXL4pBjknESr4-BEAxP3ggdqJvDTVk40b2A-1FzG8-S1L-C94vWDuReQDJW6OcChHWlK0efyRjdvt56Zm_LC29tsW8qSnDmjwEsX6cK2lYDKeWPC_vV-ZtmzVeFUToSO0A5qp92ebeOGRcXV2hn5ynACBQTsaaU6oIQy-YGeInhWi8SzXI_dCo4zyuAASDiUBvZWcu_L2u04q7FgoZGW4LouXzyA5QNMOBvnKLy_PKgeF1tAQ8V95hlOunStvppEdUbrYgCYjEbt8nULfRoCxPg"
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"

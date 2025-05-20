@@ -29,7 +29,7 @@ class Order(OrderBase):
 class OrderOut(BaseSchema):
     id: int
     order_number: str
-    customer_name: str
+    customer_id: int
     order_date: datetime
     amount: float
     payment_method: Optional[str]
