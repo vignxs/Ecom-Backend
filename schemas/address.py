@@ -26,5 +26,5 @@ class AddressOut(BaseSchema):
     country: Optional[str]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 

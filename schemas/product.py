@@ -14,18 +14,55 @@ class ProductOut(BaseSchema):
     id: int
     product_name: str
     description: Optional[str]
-    price: float
+    regular_price: float
     stock_status: str
-    quantity: int
-    sku_no: Optional[str] = None
+    stock_quantity: int
+    sku: Optional[str] = None
     permalink: str
     image: Optional[str] = None
-    content: Optional[str]
-    status: str
+    content: Optional[str] = None
+    status: Optional[str] = 'active'
     created_at: datetime
 
     class Config:
-        form_attributes = True
+        from_attributes = True
+
+    @classmethod
+    def from_orm(cls, obj):
+        return cls(
+            id=obj.id,
+            product_name=obj.product_name,
+            description=obj.description,
+            regular_price=obj.regular_price,
+            stock_status=obj.stock_status,
+            stock_quantity=obj.stock_quantity,
+            sku=obj.sku,
+            permalink=obj.permalink,
+            image=obj.image,
+            content=obj.description if obj.description else None,
+            status='active',
+            created_at=obj.created_at
+        )
+
+    class Config:
+        from_attributes = True
+
+    @classmethod
+    def from_orm(cls, obj):
+        return cls(
+            id=obj.id,
+            product_name=obj.product_name,
+            description=obj.description,
+            price=obj.regular_price,
+            stock_status=obj.stock_status,
+            quantity=obj.stock_quantity,
+            sku_no=obj.sku,
+            permalink=obj.permalink,
+            image=obj.image,
+            content=obj.description,
+            status='active',
+            created_at=obj.created_at
+        )
 
 
 class ProductCreate(BaseModel):

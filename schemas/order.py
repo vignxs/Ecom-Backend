@@ -19,7 +19,7 @@ class OrderProductOut(BaseModel):
     product: ProductOut
 
     class Config:
-        orm_mode = True
+        from_attributes = True 
 
 
 class OrderBase(BaseSchema):
@@ -61,20 +61,20 @@ class OrderListOut(BaseSchema):
     status: OrderStatus
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class OrderDetailOut(BaseSchema):
     id: int
     order_number: str
     order_date: datetime
     amount: float
-    payment_method: str
+    payment_method: Optional[str]
     status: OrderStatus
-    customer: CustomerOut          
+    customer: CustomerOut
     shipping_address: Optional[AddressOut]
-    order_products: List[OrderProductOut] 
+    order_products: List[OrderProductOut]
     created_at: datetime
     updated_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True

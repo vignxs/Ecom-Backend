@@ -16,4 +16,7 @@ class CustomerOut(BaseSchema):
     phone_country_code: Optional[str]
     phone_number: Optional[str]
 
+    class Config:
+        from_attributes = True
+
 CustomerUpdate = CustomerCreate

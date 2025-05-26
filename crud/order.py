@@ -3,8 +3,8 @@ from sqlalchemy.orm import Session
 from crud.customer import create_customer
 from models.order import Order, Customer, Address, OrderProduct
 from models.product import Product
-from models.order import OrderStatus    
-from schemas.order import OrderCreate, OrderUpdate
+from models.order import Order, Customer, Address, OrderProduct, OrderStatus
+from schemas.order import OrderCreate, OrderUpdate, OrderDetailOut
 from models.invoice import Invoice
 from schemas.combined import OrderCreateCombined
 from datetime import datetime
@@ -170,72 +170,7 @@ def crud_get_order_by_orderNumber(db: Session, order_number: str, user_id: int):
     if not order:
         return None
 
-    # Access relationships directly from the Order object
-    customer = order.customer
-    shipping_address = order.shipping_address
-
-    order_dict = {
-        'id': order.id,
-        'order_number': order.order_number,
-        'order_date': order.order_date,
-        'amount': order.amount,
-        'payment_method': order.payment_method,
-        'status': order.status,
-        'customer': {
-            'id': customer.id,
-            'first_name': customer.first_name,
-            'last_name': customer.last_name,
-            'email': customer.email,
-            'phone_country_code': customer.phone_country_code,
-            'phone_number': customer.phone_number
-        },
-        'shipping_address': {
-            'id': shipping_address.id if shipping_address else None,
-            'building': shipping_address.building if shipping_address else None,
-            'apartment_no': shipping_address.apartment_no if shipping_address else None,
-            'house_no': shipping_address.house_no if shipping_address else None,
-            'street': shipping_address.street if shipping_address else None,
-            'city': shipping_address.city if shipping_address else None,
-            'country': shipping_address.country if shipping_address else None
-        } if shipping_address else None,
-        'order_products': [
-            {
-                'id': op.id,
-                'product_id': op.product_id,
-                'quantity': op.quantity,
-                'discount': op.discount,
-                'subtotal': op.subtotal,
-                'product': {
-                    'id': op.product.id,
-                    'product_name': op.product.product_name,
-                    'description': op.product.description,
-                    'price': op.product.regular_price,
-                    'stock_status': op.product.stock_status,
-                    'quantity': op.product.stock_quantity,
-                    'sku_no': op.product.sku,
-                    'permalink': op.product.permalink,
-                    'image': op.product.image,
-                    'content': op.product.description,
-                    'status': 'active',
-                    'created_at': op.product.created_at
-                }
-            }
-            for op in order.order_products
-        ],
-        'created_at': order.created_at,
-        'updated_at': order.updated_at
-    }
-
-    # Print debug information
-    print("\nOrder Details:")
-    print(f"Order Number: {order_dict['order_number']}")
-    print(f"Customer: {order_dict['customer']['first_name']} {order_dict['customer']['last_name']}")
-    print(f"Status: {order_dict['status']}")
-    print("Products:")
-    for item in order_dict['order_products']:
-        print(f"- {item['product']['product_name']} x {item['quantity']}")
-
-    return order_dict
+    return OrderDetailOut.from_orm(order)
 
 
 def crud_delete_order(db: Session, order_id: int, user_id: int) -> None:
