@@ -11,6 +11,7 @@ class Product(Base):
     permalink = Column(String(255), unique=True, nullable=False)
     description = Column(Text, nullable=True)
     product_code = Column(String(100), nullable=True)
+    image = Column(String(255), nullable=True)
     sku = Column(String(100), nullable=True)
     gtin_upc_ean_isbn = Column(String(100), nullable=True)
     tax = Column(Float, default=0.0)

@@ -6,6 +6,21 @@ from .address import AddressOut
 from .order_product import OrderProductOut
 from .invoice import InvoiceListOut
 from models.order import OrderStatus
+from .product import ProductOut 
+from pydantic import BaseModel
+
+
+
+
+class OrderProductOut(BaseModel):
+    id: int
+    product_id: int
+    quantity: int
+    product: ProductOut
+
+    class Config:
+        orm_mode = True
+
 
 class OrderBase(BaseSchema):
     customer_name: str
@@ -51,15 +66,13 @@ class OrderListOut(BaseSchema):
 class OrderDetailOut(BaseSchema):
     id: int
     order_number: str
-    customer_name: str
     order_date: datetime
     amount: float
     payment_method: str
     status: OrderStatus
-    customer: CustomerOut
+    customer: CustomerOut          
     shipping_address: Optional[AddressOut]
-    order_products: List[OrderProductOut]
-    invoice: Optional[InvoiceListOut]
+    order_products: List[OrderProductOut] 
     created_at: datetime
     updated_at: datetime
 

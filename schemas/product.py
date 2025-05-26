@@ -17,9 +17,9 @@ class ProductOut(BaseSchema):
     price: float
     stock_status: str
     quantity: int
-    sku_no: str
-    permalink: Optional[str]
-    images: Optional[str]  # Could be changed to List[str] if stored as JSON
+    sku_no: Optional[str] = None
+    permalink: str
+    image: Optional[str] = None
     content: Optional[str]
     status: str
     created_at: datetime

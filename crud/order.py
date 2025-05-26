@@ -1,18 +1,19 @@
 from typing import List, Optional
 from sqlalchemy.orm import Session
+from crud.customer import create_customer
 from models.order import Order, Customer, Address, OrderProduct
 from models.product import Product
 from models.order import OrderStatus    
 from schemas.order import OrderCreate, OrderUpdate
+from models.invoice import Invoice
 from schemas.combined import OrderCreateCombined
 from datetime import datetime
+from sqlalchemy.orm import joinedload
 
-def get_order_number(db: Session) -> str:
+def crud_get_order_number(db: Session) -> str:
     """Generate a unique order number."""
     try:
-        
-        return "ORD-00001"
-        
+               
         last_order = db.query(Order).order_by(Order.id.desc()).first()
         if last_order:
             last_id = last_order.id
@@ -28,7 +29,7 @@ def get_order_number(db: Session) -> str:
 # Ensure OrderStatus is properly imported at the top of the file
 from models.order import Order, Customer, Address, OrderProduct, OrderStatus
 
-def create_customer(db: Session, customer_data: dict) -> Customer:
+def crud_create_customer(db: Session, customer_data: dict) -> Customer:
     """Create a new customer if they don't exist."""
     try:
         customer = db.query(Customer).filter(Customer.email == customer_data['email']).first()
@@ -41,20 +42,18 @@ def create_customer(db: Session, customer_data: dict) -> Customer:
     except Exception as e:
         raise ValueError(f"Failed to create customer: {str(e)}")
 
-def create_order(db: Session, order_data: OrderCreateCombined, user_id: int) -> Order:
+
+
+def crud_create_order(db: Session, order_data: OrderCreateCombined, user_id: int) -> Order:
     """Create a new order with all related entities."""
     try:
         # Create or get customer
-        customer = create_customer(db, {
-            'first_name': order_data.customer.first_name,
-            'last_name': order_data.customer.last_name,
-            'email': order_data.customer.email,
-            'phone_country_code': order_data.customer.phone_country_code,
-            'phone_number': order_data.customer.phone_number
-        })
+        customer = create_customer(db, order_data.customer)
 
         # Generate order number
-        order_number = get_order_number(db)
+        order_number = crud_get_order_number(db)
+
+
 
         # Create order
         order = Order(
@@ -89,7 +88,8 @@ def create_order(db: Session, order_data: OrderCreateCombined, user_id: int) -> 
             if not product:
                 raise ValueError(f"Product id {item.product_id} not found")
             
-            subtotal = (product.sale_price * item.quantity) - (item.discount or 0)
+            price = product.sale_price if product.sale_price is not None else product.regular_price
+            subtotal = (price * item.quantity) - (item.discount or 0)
             if subtotal < 0:
                 subtotal = 0
             
@@ -113,14 +113,14 @@ def create_order(db: Session, order_data: OrderCreateCombined, user_id: int) -> 
         traceback.print_exc()
         raise ValueError(f"Failed to create order: {str(e)}")
 
-def get_orders(db: Session, user_id: int) -> List[Order]:
+def crud_get_orders(db: Session, user_id: int) -> List[Order]:
     """Get all orders for a user."""
     try:
         return db.query(Order).filter(Order.user_id == user_id).all()
     except Exception as e:
         raise ValueError(f"Failed to fetch orders: {str(e)}")
 
-def filter_orders(db: Session, user_id: int, status: Optional[str] = None, customer_name: Optional[str] = None) -> List[Order]:
+def crud_filter_orders(db: Session, user_id: int, status: Optional[str] = None, customer_name: Optional[str] = None) -> List[Order]:
     """Filter orders based on status and customer name."""
     try:
         query = db.query(Order).filter(Order.user_id == user_id)
@@ -135,7 +135,7 @@ def filter_orders(db: Session, user_id: int, status: Optional[str] = None, custo
     except Exception as e:
         raise ValueError(f"Failed to filter orders: {str(e)}")
 
-def update_order(db: Session, order_id: int, update_data: OrderUpdate, user_id: int) -> Order:
+def crud_update_order(db: Session, order_id: int, update_data: OrderUpdate, user_id: int) -> Order:
     """Update an existing order."""
     try:
         order = db.query(Order).filter(Order.id == order_id, Order.user_id == user_id).first()
@@ -152,7 +152,93 @@ def update_order(db: Session, order_id: int, update_data: OrderUpdate, user_id: 
         db.rollback()
         raise ValueError(f"Failed to update order: {str(e)}")
 
-def delete_order(db: Session, order_id: int, user_id: int) -> None:
+from sqlalchemy.orm import joinedload
+
+def crud_get_order_by_orderNumber(db: Session, order_number: str, user_id: int):
+    """Get order details including all related models."""
+    # Query with all necessary fields for serialization
+    # Query the main order with all relationships
+    order = db.query(Order).options(
+        joinedload(Order.customer),
+        joinedload(Order.shipping_address),
+        joinedload(Order.order_products).joinedload(OrderProduct.product)
+    ).filter(
+        Order.order_number == order_number,
+        Order.user_id == user_id
+    ).first()
+
+    if not order:
+        return None
+
+    # Access relationships directly from the Order object
+    customer = order.customer
+    shipping_address = order.shipping_address
+
+    order_dict = {
+        'id': order.id,
+        'order_number': order.order_number,
+        'order_date': order.order_date,
+        'amount': order.amount,
+        'payment_method': order.payment_method,
+        'status': order.status,
+        'customer': {
+            'id': customer.id,
+            'first_name': customer.first_name,
+            'last_name': customer.last_name,
+            'email': customer.email,
+            'phone_country_code': customer.phone_country_code,
+            'phone_number': customer.phone_number
+        },
+        'shipping_address': {
+            'id': shipping_address.id if shipping_address else None,
+            'building': shipping_address.building if shipping_address else None,
+            'apartment_no': shipping_address.apartment_no if shipping_address else None,
+            'house_no': shipping_address.house_no if shipping_address else None,
+            'street': shipping_address.street if shipping_address else None,
+            'city': shipping_address.city if shipping_address else None,
+            'country': shipping_address.country if shipping_address else None
+        } if shipping_address else None,
+        'order_products': [
+            {
+                'id': op.id,
+                'product_id': op.product_id,
+                'quantity': op.quantity,
+                'discount': op.discount,
+                'subtotal': op.subtotal,
+                'product': {
+                    'id': op.product.id,
+                    'product_name': op.product.product_name,
+                    'description': op.product.description,
+                    'price': op.product.regular_price,
+                    'stock_status': op.product.stock_status,
+                    'quantity': op.product.stock_quantity,
+                    'sku_no': op.product.sku,
+                    'permalink': op.product.permalink,
+                    'image': op.product.image,
+                    'content': op.product.description,
+                    'status': 'active',
+                    'created_at': op.product.created_at
+                }
+            }
+            for op in order.order_products
+        ],
+        'created_at': order.created_at,
+        'updated_at': order.updated_at
+    }
+
+    # Print debug information
+    print("\nOrder Details:")
+    print(f"Order Number: {order_dict['order_number']}")
+    print(f"Customer: {order_dict['customer']['first_name']} {order_dict['customer']['last_name']}")
+    print(f"Status: {order_dict['status']}")
+    print("Products:")
+    for item in order_dict['order_products']:
+        print(f"- {item['product']['product_name']} x {item['quantity']}")
+
+    return order_dict
+
+
+def crud_delete_order(db: Session, order_id: int, user_id: int) -> None:
     """Delete an order and its related entities."""
     try:
         order = db.query(Order).filter(Order.id == order_id, Order.user_id == user_id).first()

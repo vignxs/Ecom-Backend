@@ -9,7 +9,7 @@ def create_customer(db: Session, customer_data: CustomerCreate) -> Customer:
     try:
         existing = db.query(Customer).filter(Customer.email == customer_data.email).first()
         if existing:
-            raise ValueError("Customer with this email already exists")
+            return existing
         
         customer = Customer(**customer_data.dict())
         db.add(customer)

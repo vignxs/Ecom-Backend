@@ -21,6 +21,7 @@ def get_sample_products() -> List[Dict]:
             "stock_quantity": 50,
             "stock_status": "In Stock",
             "brand": "Sony",
+            'image': 'https://example.com/wireless-bluetooth-headphones.jpg',
             "collection": "Audio",
             "description": "Premium wireless headphones with noise cancellation",
             "weight": 0.3,
@@ -33,6 +34,7 @@ def get_sample_products() -> List[Dict]:
             "stock_quantity": 10,
             "stock_status": "In Stock",
             "brand": "Samsung",
+            "image": "https://example.com/smart-led-tv.jpg",
             "collection": "Electronics",
             "description": "4K Smart LED TV with built-in streaming apps",
             "weight": 15.0,
@@ -48,6 +50,7 @@ def get_sample_products() -> List[Dict]:
             "stock_quantity": 8,
             "stock_status": "In Stock",
             "brand": "ASUS",
+            "image": "https://example.com/gaming-laptop.jpg",
             "collection": "Computers",
             "description": "High-performance gaming laptop with RTX graphics",
             "weight": 2.5,
@@ -58,7 +61,7 @@ def get_sample_products() -> List[Dict]:
 def insert_products():
     """Insert sample products into the database."""
     # Get authentication token (replace with your actual token)
-    token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJuYXJlbmRyYTExNDcwQGdtYWlsLmNvbSIsImV4cCI6MTc0NzcyMTY1MiwidHlwZSI6ImFjY2VzcyJ9.TqQxLtaWe34tWCoTxdPG99VupAtqJddOcQuIQH0ZNoD-BLIHWjFAcQFBs3vlmASkXL4pBjknESr4-BEAxP3ggdqJvDTVk40b2A-1FzG8-S1L-C94vWDuReQDJW6OcChHWlK0efyRjdvt56Zm_LC29tsW8qSnDmjwEsX6cK2lYDKeWPC_vV-ZtmzVeFUToSO0A5qp92ebeOGRcXV2hn5ynACBQTsaaU6oIQy-YGeInhWi8SzXI_dCo4zyuAASDiUBvZWcu_L2u04q7FgoZGW4LouXzyA5QNMOBvnKLy_PKgeF1tAQ8V95hlOunStvppEdUbrYgCYjEbt8nULfRoCxPg"
+    token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJuYXJlbmRyYTExNDcwQGdtYWlsLmNvbSIsImV4cCI6MTc0ODI1NTAyMiwidHlwZSI6ImFjY2VzcyJ9.1PXQk6AY1gk4wktUm3wnbmlGptH361JCTg2A5DCTZybGqJ_kB3faHWVg0T_u25-F2TSlvIQAAcV31Ezhr8q-DSfdnGNGLX2I-ATnLXndwBuj6D35NMkYCQaKcNt1-uj4eF7b0GbJyI42hDrdojpsjkTGrdmQmmBqIG-ya26VSNLBp9UTKyPPdwqJ7YxSpq6Ew2ccFMesah3VPJLIsMQpWFLD5Bg3spG9XQRcpEA19UwLjqLxPyFFfqocxlpb3o9DoRidZ2Rjvnnf3T3YCaOgtMXKHpiJnqNrrCAkWllewaKn_bX5-UVmsy-yWENDHzhF7lGubSq3jsiaZBdT4dQGLg"
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"

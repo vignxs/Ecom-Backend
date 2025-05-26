@@ -1,13 +1,14 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
+from models.invoice import Invoice
 from models.order import Order, OrderStatus
 from models.user import User
 from schemas.order import OrderOut, OrderListOut, OrderDetailOut
 from schemas.combined import OrderCreateCombined
 from schemas.invoice import InvoiceListOut
 from utils.auth_dependency import get_current_user, get_db
-from crud.order import create_order as create_order_crud, get_orders, filter_orders, update_order, delete_order
+from crud.order import crud_create_order, crud_get_orders,crud_filter_orders,crud_delete_order,crud_get_order_by_orderNumber,crud_update_order
 
 router = APIRouter(prefix="/orders", tags=["orders"])
 
@@ -19,7 +20,7 @@ async def create_order(
 ):
     """Create a new order."""
     try:
-        result = await create_order_crud(db, order_in, current_user.id)
+        result =  crud_create_order(db, order_in, current_user.id)
         return result
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -31,7 +32,7 @@ async def list_orders(
 ):
     """List all orders for the current user."""
     try:
-        return get_orders(db, current_user.id)
+        return crud_get_orders(db, current_user.id)
     except ValueError as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -44,7 +45,7 @@ async def filter_orders_endpoint(
 ):
     """Filter orders based on status and customer name."""
     try:
-        return filter_orders(db, current_user.id, status, customer_name)
+        return crud_filter_orders(db, current_user.id, status, customer_name)
     except ValueError as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -57,7 +58,7 @@ async def update_order_endpoint(
 ):
     """Update an existing order."""
     try:
-        return update_order(db, order_id, order_update, current_user.id)
+        return crud_update_order(db, order_id, order_update, current_user.id)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -69,22 +70,11 @@ async def delete_order_endpoint(
 ):
     """Delete an order."""
     try:
-        delete_order(db, order_id, current_user.id)
+        crud_delete_order(db, order_id, current_user.id)
         return {"message": "Order deleted successfully"}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@router.get("/{order_id}", response_model=OrderOut)
-def get_order(
-    order_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """Get order details."""
-    order = db.query(Order).filter(Order.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="Order not found")
-    return order
 
 @router.get("/list", response_model=List[OrderListOut])
 def get_order_list(
@@ -169,9 +159,13 @@ def get_invoices(
     ]
 
 
-@router.get("/orders/{order_id}", response_model=OrderDetailOut)
-def get_order(order_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
-    order = db.query(Order).filter(Order.id == order_id, Order.user_id == current_user.id).first()
+@router.get("/{order_number}", response_model=OrderDetailOut)
+def get_order(
+    order_number: str,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    order = crud_get_order_by_orderNumber(db, order_number, current_user.id)
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
     return order
