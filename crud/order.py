@@ -4,9 +4,11 @@ from crud.customer import create_customer
 from models.order import Order, Customer, Address, OrderProduct
 from models.product import Product
 from models.order import Order, Customer, Address, OrderProduct, OrderStatus
-from schemas.order import OrderCreate, OrderUpdate, OrderDetailOut
+from schemas.shipping import ShippingOrder
+from schemas.order import OrderDetailOut
 from models.invoice import Invoice
 from schemas.combined import OrderCreateCombined
+from schemas.order import OrderUpdate
 from datetime import datetime
 from sqlalchemy.orm import joinedload
 
@@ -120,6 +122,29 @@ def crud_get_orders(db: Session, user_id: int) -> List[Order]:
     except Exception as e:
         raise ValueError(f"Failed to fetch orders: {str(e)}")
 
+def crud_get_shipping_orders(db: Session, user_id: int) -> List[ShippingOrder]:
+    """Get all shipping orders for a user with specific fields."""
+    try:
+        orders = db.query(Order).filter(Order.user_id == user_id).options(
+            joinedload(Order.customer)
+        ).all()
+
+        shipping_orders = []
+        for order in orders:
+            shipping_order = ShippingOrder(
+                order_id=order.order_number,
+                customer_name=f"{order.customer.first_name} {order.customer.last_name}",
+                order_date=order.order_date,
+                amount=order.amount,
+                payment_method=order.payment_method,
+                status=order.status.value
+            )
+            shipping_orders.append(shipping_order)
+
+        return shipping_orders
+    except Exception as e:
+        raise ValueError(f"Failed to fetch shipping orders: {str(e)}")
+
 def crud_filter_orders(db: Session, user_id: int, status: Optional[str] = None, customer_name: Optional[str] = None) -> List[Order]:
     """Filter orders based on status and customer name."""
     try:
@@ -155,6 +180,89 @@ def crud_update_order(db: Session, order_id: int, update_data: OrderUpdate, user
 from sqlalchemy.orm import joinedload
 
 def crud_get_order_by_orderNumber(db: Session, order_number: str, user_id: int):
+    """Get order details including all related models."""
+    # Query with all necessary fields for serialization
+    # Query the main order with all relationships
+    order = db.query(Order).options(
+        joinedload(Order.customer),
+        joinedload(Order.shipping_address),
+        joinedload(Order.order_products).joinedload(OrderProduct.product)
+    ).filter(
+        Order.order_number == order_number,
+        Order.user_id == user_id
+    ).first()
+
+    if not order:
+        return None
+
+    return OrderDetailOut.from_orm(order)
+
+def crud_get_shipping_order_by_number(db: Session, order_number: str, user_id: int):
+    """Get shipping details for a specific order."""
+    try:
+        order = db.query(Order).filter(
+            Order.order_number == order_number,
+            Order.user_id == user_id
+        ).options(
+            joinedload(Order.customer),
+            joinedload(Order.shipping_address),
+            joinedload(Order.order_products).joinedload(OrderProduct.product)
+        ).first()
+
+        if not order:
+            return None
+
+        return ShippingOrder(
+            id=order.id,
+            order_number=order.order_number,
+            order_date=order.order_date,
+            amount=order.amount,
+            payment_method=order.payment_method,
+            status=order.status.value,
+            customer=ShippingOrder.Customer(
+                first_name=order.customer.first_name,
+                last_name=order.customer.last_name,
+                email=order.customer.email,
+                phone_country_code=order.customer.phone_country_code,
+                phone_number=order.customer.phone_number
+            ),
+            shipping_address=ShippingOrder.ShippingAddress(
+                building=order.shipping_address.building,
+                apartment_no=order.shipping_address.apartment_no,
+                house_no=order.shipping_address.house_no,
+                street=order.shipping_address.street,
+                city=order.shipping_address.city,
+                country=order.shipping_address.country
+            ),
+            order_products=[
+                ShippingOrder.OrderProduct(
+                    id=op.id,
+                    product_id=op.product_id,
+                    quantity=op.quantity,
+                    product=ShippingOrder.Product(
+                        id=op.product.id,
+                        product_name=op.product.product_name,
+                        description=op.product.description,
+                        regular_price=op.product.regular_price,
+                        stock_status=op.product.stock_status,
+                        stock_quantity=op.product.stock_quantity,
+                        sku=op.product.sku,
+                        permalink=op.product.permalink,
+                        image=op.product.image,
+                        content=op.product.content,
+                        status=op.product.status,
+                        created_at=op.product.created_at
+                    )
+                )
+                for op in order.order_products
+            ],
+            created_at=order.created_at,
+            updated_at=order.updated_at
+        )
+    except Exception as e:
+        raise ValueError(f"Failed to fetch shipping order: {str(e)}")
+
+
     """Get order details including all related models."""
     # Query with all necessary fields for serialization
     # Query the main order with all relationships
